@@ -63,7 +63,16 @@ function Promise(fn) {
   this._value = null;
   this._deferreds = null;
   if (fn === noop) return;
-  doResolve(fn, this);
+  var resolve, reject, 
+    fac = function(rs, rj) {
+      resolve = rs;
+      reject = rj;
+      fn(rs, rj);
+    }, me = this;
+  this.cancel = function(err) {
+    reject && reject(err);
+  };
+  doResolve(fac, this);
 }
 Promise._onHandle = null;
 Promise._onReject = null;
@@ -74,6 +83,7 @@ Promise.prototype.then = function(onFulfilled, onRejected) {
     return safeThen(this, onFulfilled, onRejected);
   }
   var res = new Promise(noop);
+  res.cancel = this.cancel;
   handle(this, new Handler(onFulfilled, onRejected, res));
   return res;
 };
@@ -148,6 +158,7 @@ function resolve(self, newValue) {
       then === self.then &&
       newValue instanceof Promise
     ) {
+      if (newValue.cancel) self.cancel = newValue.cancel
       self._state = 3;
       self._value = newValue;
       finale(self);
@@ -171,6 +182,7 @@ function reject(self, newValue) {
   finale(self);
 }
 function finale(self) {
+  self.cancel = noop
   if (self._deferredState === 1) {
     handle(self, self._deferreds);
     self._deferreds = null;
