@@ -226,6 +226,12 @@ function awesomeAPI(foo, bar, callback) {
 
 People who use typical node.js style callbacks will be able to just pass a callback and get the expected behavior.  The enlightened people can not pass a callback and will get awesome promises.
 
+#### Promise#cancel(msg)
+
+_Non Standard_
+
+cancel Promise Chain, throw reject
+
 ## License
 
   MIT
