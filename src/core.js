@@ -62,7 +62,10 @@ function Promise(fn) {
   this._state = 0;
   this._value = null;
   this._deferreds = null;
-  if (fn === noop) return;
+  if (fn === noop) {
+    this.cancel = noop;
+    return;
+  }
   var resolve, reject, 
     fac = function(rs, rj) {
       resolve = rs;
@@ -85,7 +88,7 @@ Promise.prototype.then = function(onFulfilled, onRejected) {
   var res = new Promise(noop);
   handle(this, new Handler(onFulfilled, onRejected, res));
   // in case of memory leak
-  if (this.cancel) {
+  if (this.cancel && this.cancel != noop) {
     if (res._cancel) {
       var me = this;
       res.cancel = function(err) {
